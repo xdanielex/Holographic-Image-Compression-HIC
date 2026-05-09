@@ -1,0 +1,33 @@
+ACADEMIC EVALUATION LICENSE
+
+Copyright (c) 2026 Daniele Rufo - PlaneCombo / Holographic Image Compression
+All rights reserved.
+
+1. GRANT OF LICENSE
+This software (planecombo_cli.exe and related dependencies) is provided in executable 
+form exclusively for academic evaluation, performance benchmarking, and 
+non-commercial research purposes related to the holographic compression 
+methodology described in holocomp.pdf.
+
+2. SYSTEM REQUIREMENTS & TARGET
+The provided executable is compiled specifically for Windows 11 (64-bit) systems. 
+It requires FFmpeg, Zstd, and specific OpenCV DLLs to function. It is intended 
+solely as a proof-of-concept for the holographic sparsity reduction described 
+in the project documentation.
+
+3. RESTRICTIONS
+- You may NOT decompile, reverse engineer, or disassemble the executable.
+- You may NOT redistribute the software or host it on other platforms.
+- You may NOT use this software for any commercial purposes or production environments.
+- You may NOT use the output (.dan files or reconstructed images) for commercial gains.
+
+4. COMMERCIAL USE AND COLLABORATIONS
+This project is part of a potential patent disclosure regarding sparse 
+representation and OMP-based compression. For any commercial inquiries, 
+production-grade licensing, full source code access, or research collaborations, 
+please contact the author directly at: xdaniele.rufox@gmail.com
+
+5. NO WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED. THE AUTHOR IS NOT RESPONSIBLE FOR ANY SYSTEM INSTABILITY, DATA LOSS, 
+OR ANY OTHER DAMAGES ARISING FROM THE USE OF THIS DEMONSTRATION SOFTWARE.
