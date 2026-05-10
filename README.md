@@ -67,7 +67,7 @@ The system allows for granular control over the quality/size trade-off:
 * opencv_world455.dll / opencv_videoio_ffmpeg455_64.dll: Runtime libraries.
 * holocomp.pdf: Full technical documentation.
 
-* ---
+---
 
 ### Support my Research 🚀
 If you find this project useful for your benchmarks or academic evaluation, consider supporting my independent research:
