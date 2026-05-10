@@ -66,3 +66,10 @@ The system allows for granular control over the quality/size trade-off:
 * zstd.exe: Compression utility.
 * opencv_world455.dll / opencv_videoio_ffmpeg455_64.dll: Runtime libraries.
 * holocomp.pdf: Full technical documentation.
+
+* ---
+
+### Support my Research 🚀
+If you find this project useful for your benchmarks or academic evaluation, consider supporting my independent research:
+
+[![Donate with PayPal](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://paypal.me/xdanielex272)
