@@ -24,6 +24,14 @@ For detailed mathematical foundations, dictionary construction, and performance 
 
 ---
 
+### 🌐 Official Academic Publication (Zenodo)
+The theoretical foundations and algorithmic specifications of this architecture have been officially published and archived on **Zenodo**:
+
+👉 **[Read the official paper on Zenodo](https://zenodo.org/records/20304000)**
+
+**How to cite:**
+Rufo, D. (2026). Holographic Image Compression via Sparse Representation and Orthogonal Pursuit in Transformed Spaces. Zenodo. https://doi.org/10.5281/zenodo.20304000
+
 ## 🚀 Usage Examples
 
 ### 1. Compression
