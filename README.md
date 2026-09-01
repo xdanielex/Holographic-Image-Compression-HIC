@@ -235,16 +235,6 @@ decodes, 2 942 clean rejections and **zero crashes**.
 ---
 
 
-Reproducing the published numbers:
-
-```bash
-bench5.py      # 976 rate–distortion points
-analyze5.py    # BD-rate tables
-
-```
-
----
-
 ## Documentation
 
 The current paper — `holocomp.pdf`, 6 pages — contains the full
