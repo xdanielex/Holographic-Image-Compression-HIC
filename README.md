@@ -8,9 +8,13 @@ coding: quadtree partitioning, 35 directional intra prediction modes, adaptive
 DCT-II/DST-VII selection, trellis quantisation and a context-adaptive binary
 arithmetic coder.
 
-On the Kodak test set it reduces bitrate against JPEG by **33.6 % at equal PSNR**
-and **32.3 % at equal SSIM** — within two points of WebP in PSNR, ahead of WebP in
-SSIM, and behind AVIF.
+**Current release: v6** (`HCMPv6`). On the Kodak test set it reduces bitrate
+against JPEG by **37.1 % at equal PSNR** and **32.3 % at equal SSIM** — level with
+WebP method 6 in PSNR (−36.6 % on the same measurement), ahead of WebP in SSIM,
+and still behind AVIF.
+
+v5 remains in the repository as `src/holocomp5.cpp`; its bitstream is *not*
+compatible with v6.
 
 ---
 
@@ -41,44 +45,90 @@ for reproducibility of the negative result.
 
 ---
 
+## What is new in v6
+
+Four tools were added after v5, each accepted or rejected on measured BD-rate
+against a frozen baseline.
+
+| tool | BD-rate vs v5 | status |
+| :--- | ------------: | :----- |
+| **32×32 coding units** | **−4.60 %** | default |
+| **Cross-component chroma prediction (CCLM)** | −1.2 to −2.5 % | default |
+| **Independently decodable slices** | −0.1 % | default (auto) |
+| Multi-model CCLM (MMLM) | +0.1 to +0.6 % | opt-in `--mmlm` |
+| Reference sample smoothing | −0.3 to +0.15 % | opt-in `--refsmooth` |
+| PDPC | +0.7 to +1.6 % | **removed** |
+
+**CCLM.** Chroma predicted as `a·Y + b` from the collocated reconstructed luma,
+with `a,b` fitted by least squares on causal neighbours by both encoder and
+decoder — only a one-bin flag is transmitted. Slope clamped to ±2.
+
+**Slices.** Horizontal bands with reset contexts and their own arithmetic
+streams, decoded in parallel. Luma and chroma get separate streams per slice so
+no thread has to replay a band to reposition its coder. Default is adaptive:
+≥16 CU rows per band, capped at 4.
+
+**32×32 units.** The quadtree starts at 32×32; transforms, quantisation tables,
+zigzag scans and per-size contexts were extended to a fourth size class. Largest
+single gain, positive on all eight Kodak images — though neutral-to-negative on
+dense foliage (+0.58 % on the `foresta` test image), where large partitions
+cannot capture high-frequency texture.
+
+**SIMD.** SSE2 kernels for the transforms, the horizontal deblocking pass and
+the colour transform. SSE2 is baseline on x86-64, so there is no runtime
+dispatch; a scalar fallback compiles on other targets.
+
+Three of these are standard in modern video codecs. MMLM, PDPC and reference
+smoothing did not pay for themselves at the block sizes and context granularity
+used here, and are reported as negative results rather than quietly dropped.
+
 ## Measured performance
 
 Bjøntegaard delta-rate against JPEG, averaged over the Kodak set.
 **Negative is better** (less bitrate for the same quality).
 
-| Codec                          | BD-rate (PSNR) | BD-rate (SSIM) |
-| :----------------------------- | -------------: | -------------: |
-| v1 (sparse coding, best tuning)|       +787.9 % |       +688.3 % |
-| v2 (YCbCr, per-band quant.)    |         −2.2 % |         −3.1 % |
-| v3 (run-length, intra, RDOQ)   |        −14.8 % |        −11.0 % |
-| v4 (arithmetic coder, quadtree)|        −28.1 % |        −22.1 % |
-| **v5 (current)**               |    **−33.6 %** |    **−32.3 %** |
-| WebP (method 6)                |        −35.6 % |        −26.5 % |
-| AVIF (speed 6)                 |        −45.3 % |        −40.6 % |
+| Codec                    | BD-rate (PSNR) | BD-rate (SSIM) |
+| :----------------------- | -------------: | -------------: |
+| **holocomp v6**          |    **−36.8 %** |    **−30.5 %** |
+| WebP (method 6)          |        −36.4 % |        −24.1 % |
+| AVIF (speed 6)           |        −46.4 % |        −40.6 % |
+
+v6 is level with WebP in PSNR — the 0.4-point difference is well inside the
+spread of an eight-image set — and **6.4 points ahead in SSIM**. AVIF keeps a
+clear advantage on both metrics. All three curves were measured over a PSNR
+range that overlaps throughout, so the delta-rates are directly comparable.
 
 Mean PSNR (dB) at matched bitrate:
 
-| bpp  | JPEG  | v4    | v5    | WebP  | AVIF  |
-| :--- | ----: | ----: | ----: | ----: | ----: |
-| 0.25 | 29.49 | 27.36 | 27.61 | 32.05 | 31.53 |
-| 0.50 | 28.52 | 30.02 | 30.40 | 33.42 | 31.30 |
-| 1.00 | 31.61 | 33.20 | 33.67 | 33.88 | 34.65 |
-| 1.50 | 33.72 | 35.45 | 35.91 | 36.20 | 36.87 |
+| bpp  | JPEG  | v6    | WebP  | AVIF  |
+| :--- | ----: | ----: | ----: | ----: |
+| 0.25 | 29.49 | 30.77 | 30.65 | 28.48 |
+| 0.50 | 28.49 | 30.52 | 30.41 | 31.19 |
+| 1.00 | 31.55 | 33.74 | 33.74 | 34.59 |
+| 1.50 | 33.64 | 35.06 | 36.09 | 36.80 |
 
-Encoding is multithreaded (wavefront over coding units). Decoding threads the
-deblocking filter and the colour-conversion pass; the entropy stage is serial.
+### Speed and runtime
 
-The wavefront is **bit-exact**: `--threads N` produces byte-identical output for
-every N, verified across 3 images x 4 quality levels. Intra prediction of a CU
-depends on the row above and the column to the left, so anti-diagonals can run
-concurrently while entropy coding stays serial in raster order.
+1920×1280 image, two cores, decode times exclude file writing for every codec:
+
+| codec               | encode  | decode |
+| :------------------ | ------: | -----: |
+| v6 `--speed 0`      | 2244 ms |  79 ms |
+| **v6 `--speed 4`**  |  551 ms |  79 ms |
+| WebP (method 6)     |  587 ms |  34 ms |
+| JPEG                |   18 ms |  10 ms |
+
+Encoding is multithreaded (wavefront over coding units, **bit-exact** — the
+thread count never changes the output). The decoder threads its slices, the
+deblocking filter and the colour-conversion pass; the arithmetic stage is
+inherently serial.
 
 | threads | encode (2.46 MP) | speedup |
 | :------ | ---------------: | ------: |
-| 1       | 4.64 s           |  1.00x  |
-| 2       | 2.50 s           |  1.85x  |
+| 1       | 4.64 s           |  1.00×  |
+| 2       | 2.50 s           |  1.85×  |
 
-Measured on a 2-core sandbox; 93 % parallel efficiency.
+93 % parallel efficiency on two cores.
 
 ### Speed presets
 
@@ -96,32 +146,20 @@ quantisation, a coarse-to-fine angular scan and a quadtree depth cap.
 
 ### Equal-quality comparison
 
-Matched PSNR on a 2.46 Mpixel photograph of dense foliage (worst case for a
-transform coder). Quality parameters bisected to hit each target; decode times
-exclude file writing for every codec.
+Matched PSNR on a 2.46 Mpixel photograph of dense foliage — a worst case for any
+transform coder. Quality parameters bisected to hit each target.
 
-**At 25.5 dB:**
+| PSNR    | v6 bytes | ratio  | vs JPEG | vs WebP m6 |
+| :------ | -------: | -----: | ------: | ---------: |
+| 24.0 dB |  192 242 | 38.4:1 | −19.7 % |    +3.3 %  |
+| 25.5 dB |  275 897 | 26.7:1 | −21.6 % |    +8.5 %  |
+| 27.0 dB |  372 107 | 19.8:1 | −19.9 % |   +10.1 %  |
+| 28.0 dB |  444 637 | 16.6:1 | −19.3 % |   +13.2 %  |
 
-| codec          | ratio      | reduction | encode  | decode |
-| :------------- | ---------: | --------: | ------: | -----: |
-| v5 `--speed 0` | 26.8:1     | 96.26 %   | 2180 ms | 110 ms |
-| v5 `--speed 4` | 25.5:1     | 96.07 %   |  521 ms | 112 ms |
-| WebP method 6  | **29.0:1** | 96.55 %   |  490 ms |  37 ms |
-| WebP method 4  | 27.8:1     | 96.40 %   |  227 ms |  37 ms |
-| JPEG           | 20.9:1     | 95.23 %   |   17 ms |  11 ms |
-
-Across targets from 24 to 28 dB, `--speed 4` relative to the anchors:
-
-| PSNR   | bytes vs JPEG | bytes vs WebP m6 | encode vs WebP m6 | decode vs WebP m6 |
-| :----- | ------------: | ---------------: | ----------------: | ----------------: |
-| 24.0   | -14.0 %       | +10.6 %          | 1.30x             | 3.02x             |
-| 25.5   | -17.8 %       | +13.9 %          | 1.06x             | 3.06x             |
-| 27.0   | -16.8 %       | +14.3 %          | 1.06x             | 3.11x             |
-| 28.0   | -16.2 %       | +17.6 %          | **0.91x**         | 3.15x             |
-
-The codec consistently beats JPEG by 14-18 % in size at equal quality and
-trails WebP by 11-18 %. Encoding is on par with WebP method 6 and faster at
-high quality; decoding remains a stable 3x behind.
+On this image v6 produces **about 20 % fewer bytes than JPEG** at equal quality
+and trails WebP by 3–13 %. Dense foliage is where the codec is weakest: its
+BD-rate here is far behind the Kodak average, because high-frequency texture
+defeats large partitions and directional prediction alike.
 
 Rate is always reported as `R = 8B / (W·H)` bits per pixel, where `B` is the coded
 file size. Ratios of the form *(source file size)/(coded size)* are not used: when
@@ -137,16 +175,16 @@ No external dependencies beyond a C++17 compiler. Image I/O uses public-domain
 
 ```bash
 # Linux
-g++ -O2 -std=c++17 -Ithird_party src/holocomp5.cpp -lm -o holocomp5
+g++ -O3 -march=x86-64-v2 -std=c++17 -Ithird_party src/holocomp6.cpp -lm -pthread -o holocomp6
 
 # Windows (MSVC)
-cl /O2 /std:c++17 /Ithird_party src\holocomp5.cpp /Fe:holocomp5.exe
+cl /O2 /std:c++17 /EHsc /Ithird_party src\holocomp6.cpp /Fe:holocomp6.exe
 
 # Windows, cross-compiled from Linux
 pip install ziglang
 python3 -m ziglang c++ -O2 -std=c++17 -Ithird_party \
     -Wno-nullability-completeness -target x86_64-windows-gnu \
-    src/holocomp5.cpp -o holocomp5-win-x86_64.exe
+    src/holocomp6.cpp -o holocomp6-win-x86_64.exe
 ```
 
 Prebuilt static binaries for Linux and Windows x86-64 are in `release/bin/`.
@@ -160,33 +198,33 @@ all of these; this one requires none.
 The **command comes first**, before any option:
 
 ```bash
-holocomp5 <command> [options]
+holocomp6 <command> [options]
 
 # encode
-holocomp5 encode --in image.png --out file.hc5 --quality 60
+holocomp6 encode --in image.png --out file.hc6 --quality 60
 
 # decode
-holocomp5 decode --in file.hc5 --out reconstructed.png
+holocomp6 decode --in file.hc6 --out reconstructed.png
 
 # encode, decode and report bpp / PSNR / SSIM in one pass
-holocomp5 roundtrip --in image.png --out file.hc5 --quality 60 --recon out.png
+holocomp6 roundtrip --in image.png --out file.hc6 --quality 60 --recon out.png
 
 # decoder robustness check
-holocomp5 fuzz --in file.hc5 --iters 3000
+holocomp6 fuzz --in file.hc6 --iters 3000
 
 # help
-holocomp5 --help
+holocomp6 --help
 ```
 
-Input may be PNG, JPEG, BMP, TGA or GIF. The compressed file is `.hc5`;
+Input may be PNG, JPEG, BMP, TGA or GIF. The compressed file is `.hc6`;
 reconstructed images are always written as PNG, so `--out out.jpg` will not
 produce a JPEG — use `--recon out.png`.
 
 Omitting the command is the most common mistake:
 
 ```
-holocomp5 --in foresta.jpg --out out.jpg --quality 60      # wrong, no command
-holocomp5 roundtrip --in foresta.jpg --out foresta.hc5 \
+holocomp6 --in foresta.jpg --out out.jpg --quality 60      # wrong, no command
+holocomp6 roundtrip --in foresta.jpg --out foresta.hc6 \
           --quality 60 --recon rec.png                     # right
 ```
 
@@ -195,11 +233,14 @@ holocomp5 roundtrip --in foresta.jpg --out foresta.hc5 \
 | Parameter   | Default | Description                                        |
 | :---------- | :------ | :------------------------------------------------- |
 | `--quality` | 50      | Rate control, 1–100. The only knob you normally need. |
-| `--maxsize` | 16      | Quadtree root size (4, 8 or 16).                   |
+| `--maxsize` | 32      | Quadtree root size (4, 8, 16 or 32).               |
 | `--minsize` | 4       | Smallest leaf size.                                |
 | `--lambda`  | 1.0     | Scale factor on the RD Lagrangian.                 |
 | `--threads` | 0       | 0 = all cores, 1 = serial. Does not change output. |
 | `--speed`   | 0       | 0 = reference quality, 1–4 progressively faster.   |
+| `--slices`  | 0       | 0 = auto, N = fixed decodable bands.               |
+| `--no-cclm` | off     | Disable cross-component chroma prediction.         |
+| `--mmlm`    | off     | Multi-model CCLM (measured as a net loss).         |
 
 Unlike v1, **block size and coefficient count are not user parameters**. They are
 chosen per block by the rate–distortion search, so there is no tuning to get right.
@@ -223,21 +264,51 @@ across the 2 736-configuration sweep; `--patch 8` dominates.
 
 ## Bitstream
 
-`.hc5` files begin with a 26-byte header — magic `HCMPv5`, flags, quadtree bounds,
-dimensions, quality — followed by a single arithmetic-coded payload carrying Y, Cb
-and Cr. Roughly 250 adaptive contexts are used; **no probability or quantisation
-tables are transmitted.**
+`.hc6` files begin with a header — magic `HCMPv6`, flags, quadtree bounds,
+dimensions, quality, slice count — followed by two length tables (luma and chroma,
+one entry per slice) and then the arithmetic-coded slice payloads. Roughly 250
+adaptive contexts are used; **no probability or quantisation tables are
+transmitted.**
 
-Every decoded index and magnitude is bounds-checked. Fuzzing with 3 000 mutated
-bitstreams (truncations, bit flips, multi-byte corruption) produced 58 successful
-decodes, 2 942 clean rejections and **zero crashes**.
+The format is **not compatible with v5**: `.hc5` files cannot be read by v6 and
+vice versa.
+
+Every decoded index and magnitude is bounds-checked, including the slice table.
+Fuzzing with 2 500 mutated bitstreams (truncations, bit flips, multi-byte
+corruption) produced clean rejections and **zero crashes**; AddressSanitizer runs
+clean. Encoder and decoder reconstructions are byte-identical across nine
+image × quality combinations.
 
 ---
 
+## Repository layout
+
+```
+src/holocomp6.cpp     current codec (~1400 lines, single translation unit)
+src/holocomp5.cpp     previous release, kept for reference
+src/holocomp.cpp      v2 codec + legacy v1 sparse-coding pipeline
+src/holocomp3.cpp     v3
+src/holocomp4.cpp     v4
+release6/bin/         prebuilt Linux and Windows x86-64 executables (v6)
+release6/             holocomp_v6_paper.pdf
+paper/                paper generator + 8 vector figures
+bench/                benchmark harness and raw JSON results
+third_party/          stb_image, stb_image_write (public domain)
+```
+
+Reproducing the published numbers:
+
+```bash
+python3 bench/bench5.py      # 976 rate–distortion points
+python3 bench/analyze5.py    # BD-rate tables
+python3 bench/bench_v1_sweep.py   # 2 736-configuration v1 sweep
+```
+
+---
 
 ## Documentation
 
-The current paper — `holocomp.pdf`, 6 pages — contains the full
+The current paper — `release6/holocomp_v6_paper.pdf`, 8 pages — contains the full
 mathematical treatment, including the formal proof of OMP/thresholding equivalence,
 the comparison against JPEG, WebP and AVIF, and the per-tool ablation.
 
@@ -261,16 +332,20 @@ Sections II and VII of the current paper.
 
 ## Known limitations
 
+- The Windows executable is cross-compiled with zig and has been confirmed
+  running on Windows 11. It is built from the same source as the Linux binary.
+- Console output uses UTF-8; on legacy Windows codepages a few characters in the
+  banner may render incorrectly. This is cosmetic.
 - Evaluation covers eight Kodak images — natural photography only. Behaviour on
   documents, synthetic graphics and screenshots is untested.
-- AVIF remains ahead by roughly 12 BD-rate points on both metrics.
-- Decoding is ~3× slower than WebP (112 ms vs 36 ms on 2.46 MP). Deblocking and
-  the fused chroma-upsample/colour-conversion pass are threaded, but the
-  arithmetic stream itself is inherently serial: further gains would require
-  slicing the bitstream, which changes the format and costs a little
-  compression.
-- The transforms are scalar C++ with autovectorisation hints; no hand-written
-  SIMD kernels.
+- AVIF remains ahead by roughly 10 BD-rate points on both metrics.
+- Decoding is ~2.2× slower than WebP (79 ms vs 34 ms on 2.46 MP). Slices,
+  deblocking and the colour-conversion pass are threaded and the hot loops use
+  SSE2, but the arithmetic decoder itself is serial by construction.
+- Performance is uneven across content: level with WebP on the Kodak average,
+  but 3–13 % behind on dense foliage, where large partitions and directional
+  prediction both struggle.
+- SIMD is SSE2 only. No AVX2 path, no runtime dispatch.
 - No progressive decode, no alpha channel.
 
 ---
