@@ -281,27 +281,12 @@ image × quality combinations.
 
 ---
 
-## Repository layout
-
-```
-src/holocomp6.cpp     current codec (~1400 lines, single translation unit)
-src/holocomp5.cpp     previous release, kept for reference
-src/holocomp.cpp      v2 codec + legacy v1 sparse-coding pipeline
-src/holocomp3.cpp     v3
-src/holocomp4.cpp     v4
-release6/bin/         prebuilt Linux and Windows x86-64 executables (v6)
-release6/             holocomp_v6_paper.pdf
-paper/                paper generator + 8 vector figures
-bench/                benchmark harness and raw JSON results
-third_party/          stb_image, stb_image_write (public domain)
-```
-
 Reproducing the published numbers:
 
 ```bash
 python3 bench/bench5.py      # 976 rate–distortion points
 python3 bench/analyze5.py    # BD-rate tables
-python3 bench/bench_v1_sweep.py   # 2 736-configuration v1 sweep
+
 ```
 
 ---
