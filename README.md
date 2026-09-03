@@ -392,12 +392,8 @@ Sections II and VII of the current paper.
 
 ## License and restrictions
 
-- Released for demonstration and academic evaluation purposes.
-- Commercial use, redistribution and reverse engineering are prohibited.
-- For commercial licensing or custom implementations: xdaniele.rufox@gmail.com
-
-`third_party/stb_image.h` and `stb_image_write.h` are public domain and carry
-their own terms.
+holocomp is distributed as **binaries plus documentation**. The source code is
+not published. Full terms in [`LICENSE.txt`](LICENSE.txt).
 
 ---
 
