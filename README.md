@@ -340,21 +340,6 @@ image × quality combinations.
 
 ---
 
-## Repository layout
-
-```
-src/holocomp6u.cpp    current codec (~1400 lines, single translation unit)
-src/holocomp6.cpp     v6 without archival mode
-src/holocomp5.cpp     previous release, kept for reference
-src/holocomp.cpp      v2 codec + legacy v1 sparse-coding pipeline
-src/holocomp3.cpp     v3
-src/holocomp4.cpp     v4
-release6u/            prebuilt Linux + Windows executables, paper, this README
-paper/                paper generator + 8 vector figures
-bench/                benchmark harness and raw JSON results
-third_party/          stb_image, stb_image_write (public domain)
-```
-
 Reproducing the published numbers:
 
 ```bash
