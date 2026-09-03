@@ -345,14 +345,13 @@ Reproducing the published numbers:
 ```bash
 python3 bench/bench5.py      # 976 rate–distortion points
 python3 bench/analyze5.py    # BD-rate tables
-python3 bench/bench_v1_sweep.py   # 2 736-configuration v1 sweep
 ```
 
 ---
 
 ## Documentation
 
-The current paper — `release6/holocomp_v6u_paper.pdf`, 8 pages — contains the full
+The current paper — `holocomp.pdf`, 8 pages — contains the full
 mathematical treatment, including the formal proof of OMP/thresholding equivalence,
 the comparison against JPEG, WebP and AVIF, and the per-tool ablation.
 
