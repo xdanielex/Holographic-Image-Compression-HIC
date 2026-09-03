@@ -375,12 +375,6 @@ Sections II and VII of the current paper.
 
 ## Known limitations
 
-- The Windows executable is cross-compiled with zig and has been confirmed
-  running on Windows 11. It is built from the same source as the Linux binary.
-- Console output uses UTF-8; on legacy Windows codepages a few characters in the
-  banner may render incorrectly. This is cosmetic.
-- Evaluation covers eight Kodak images — natural photography only. Behaviour on
-  documents, synthetic graphics and screenshots is untested.
 - AVIF remains ahead by roughly 10 BD-rate points on both metrics.
 - Decoding is ~2.2× slower than WebP (79 ms vs 34 ms on 2.46 MP). Slices,
   deblocking and the colour-conversion pass are threaded and the hot loops use
