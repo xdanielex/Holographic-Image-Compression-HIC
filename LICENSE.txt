@@ -1,33 +1,191 @@
-ACADEMIC EVALUATION LICENSE
+================================================================================
+holocomp — Software Licence Agreement
+Copyright (C) 2026 Daniele Rufo. All rights reserved.
+================================================================================
 
-Copyright (c) 2026 Daniele Rufo - PlaneCombo / Holographic Image Compression
-All rights reserved.
+holocomp is distributed in binary form only, together with its technical
+documentation. It is dual-licensed: the FREE USE LICENCE below applies by
+default; a COMMERCIAL LICENCE is available for uses it does not cover.
 
-1. GRANT OF LICENSE
-This software (planecombo_cli.exe and related dependencies) is provided in executable 
-form exclusively for academic evaluation, performance benchmarking, and 
-non-commercial research purposes related to the holographic compression 
-methodology described in holocomp.pdf.
+By installing, copying or using the software you accept these terms.
 
-2. SYSTEM REQUIREMENTS & TARGET
-The provided executable is compiled specifically for Windows 11 (64-bit) systems. 
-It requires FFmpeg, Zstd, and specific OpenCV DLLs to function. It is intended 
-solely as a proof-of-concept for the holographic sparsity reduction described 
-in the project documentation.
 
-3. RESTRICTIONS
-- You may NOT decompile, reverse engineer, or disassemble the executable.
-- You may NOT redistribute the software or host it on other platforms.
-- You may NOT use this software for any commercial purposes or production environments.
-- You may NOT use the output (.dan files or reconstructed images) for commercial gains.
+--------------------------------------------------------------------------------
+1. DEFINITIONS
+--------------------------------------------------------------------------------
 
-4. COMMERCIAL USE AND COLLABORATIONS
-This project is part of a potential patent disclosure regarding sparse 
-representation and OMP-based compression. For any commercial inquiries, 
-production-grade licensing, full source code access, or research collaborations, 
-please contact the author directly at: xdaniele.rufox@gmail.com
+"Software"       the holocomp executables supplied by the Licensor
+                 (holocomp6u-linux-x86_64, holocomp6u-win-x86_64.exe and any
+                 successor build), plus the accompanying documentation.
 
-5. NO WARRANTY
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
-IMPLIED. THE AUTHOR IS NOT RESPONSIBLE FOR ANY SYSTEM INSTABILITY, DATA LOSS, 
-OR ANY OTHER DAMAGES ARISING FROM THE USE OF THIS DEMONSTRATION SOFTWARE.
+"Licensor"       Daniele Rufo, the sole copyright holder.
+
+"You"            the individual or legal entity using the Software.
+
+"Output Files"   compressed files (.hc6) and decoded images produced by running
+                 the Software on your own material.
+
+"Internal Use"   use by You, or by employees and contractors acting on your
+                 behalf, on your own premises or private infrastructure, where
+                 the Software itself is not made available to third parties.
+
+
+--------------------------------------------------------------------------------
+2. FREE USE LICENCE
+--------------------------------------------------------------------------------
+
+The Licensor grants You a worldwide, royalty-free, non-exclusive,
+non-transferable licence to:
+
+  a) install and run the Software on any number of machines under your control;
+
+  b) use it for evaluation, testing, research and benchmarking;
+
+  c) use it for INTERNAL USE, INCLUDING INTERNAL COMMERCIAL USE — for example
+     compressing your own document archive, scan collection or image library,
+     whether or not your organisation is a commercial one;
+
+  d) publish measurements, benchmarks and comparisons obtained with the
+     Software, favourable or unfavourable, including in academic work.
+     Attribution to holocomp and its version is requested;
+
+  e) make backup copies for your own use.
+
+This licence is free of charge and requires no registration, notification or
+prior permission from the Licensor.
+
+
+--------------------------------------------------------------------------------
+3. OWNERSHIP OF OUTPUT FILES
+--------------------------------------------------------------------------------
+
+Output Files belong entirely to You. The Licensor claims no right over them and
+imposes no restriction on their use, storage, transfer or distribution. Nothing
+in this Agreement gives the Licensor any interest in your data.
+
+
+--------------------------------------------------------------------------------
+4. WHAT REQUIRES A COMMERCIAL LICENCE
+--------------------------------------------------------------------------------
+
+The Free Use Licence does NOT permit, and a separate written Commercial Licence
+is required in order to:
+
+  a) redistribute, sublicense, sell, rent or lend the Software, in whole or in
+     part, to any third party;
+
+  b) bundle or embed it in a product, application, appliance, scanner or
+     firmware supplied to others;
+
+  c) make its functionality available to third parties as a service, whether
+     hosted, cloud, SaaS or otherwise, including any service where third
+     parties submit material to be compressed or decoded;
+
+  d) provide it to clients as part of a service or consultancy engagement;
+
+  e) use it on behalf of a third party as a bureau or outsourcing service.
+
+Commercial licences are granted on negotiated terms and may include source
+access, support, warranties, bitstream stability commitments and custom builds.
+
+Contact: xdaniele.rufox@gmail.com
+Please state your intended use, expected volume and deployment model.
+
+
+--------------------------------------------------------------------------------
+5. RESTRICTIONS
+--------------------------------------------------------------------------------
+
+Except as permitted above, You shall not:
+
+  a) modify, adapt or create derivative works of the Software;
+
+  b) remove, alter or obscure any copyright, licence or attribution notice;
+
+  c) decompile, disassemble or otherwise reverse engineer the Software, or
+     attempt to derive its source code or the specification of its bitstream
+     format, EXCEPT to the extent such acts cannot lawfully be prohibited.
+     In particular, nothing in this clause limits the rights granted to You by
+     Articles 5 and 6 of Directive 2009/24/EC of the European Parliament and of
+     the Council on the legal protection of computer programs, nor any
+     equivalent non-waivable right under applicable national law.
+
+The Licensor does not distribute the source code of the Software. Source access
+may be made available under a Commercial Licence.
+
+
+--------------------------------------------------------------------------------
+6. THIRD-PARTY COMPONENTS
+--------------------------------------------------------------------------------
+
+The Software incorporates the following third-party code, which is not covered
+by this Agreement and remains under its own terms:
+
+  stb_image.h and stb_image_write.h by Sean Barrett — released to the public
+  domain (Unlicense), and alternatively available under the MIT Licence.
+  See https://github.com/nothings/stb
+
+
+--------------------------------------------------------------------------------
+7. NO WARRANTY
+--------------------------------------------------------------------------------
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, ACCURACY AND NON-INFRINGEMENT.
+
+holocomp is a LOSSY compressor: decoded images are approximations of the
+originals. It is research software and its bitstream format is NOT FROZEN —
+future versions may be unable to decode files produced by this one. You are
+responsible for retaining your original material and for validating fitness for
+your purpose before relying on the Software for archival, legal, medical or
+other critical use.
+
+
+--------------------------------------------------------------------------------
+8. LIMITATION OF LIABILITY
+--------------------------------------------------------------------------------
+
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE LICENSOR SHALL NOT BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS
+OF DATA, LOSS OF PROFITS OR BUSINESS INTERRUPTION, ARISING OUT OF THE USE OF OR
+INABILITY TO USE THE SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGES.
+
+Nothing in this Agreement excludes or limits liability for death or personal
+injury caused by negligence, for fraud, or any other liability that cannot
+lawfully be excluded. Nothing in this Agreement affects the statutory rights of
+consumers.
+
+
+--------------------------------------------------------------------------------
+9. TERM AND TERMINATION
+--------------------------------------------------------------------------------
+
+This licence applies for as long as You comply with it. It terminates
+automatically if You breach any of its terms, in which case You must cease use
+and delete all copies of the Software. Output Files already produced are
+unaffected by termination (see clause 3).
+
+
+--------------------------------------------------------------------------------
+10. GOVERNING LAW
+--------------------------------------------------------------------------------
+
+This Agreement is governed by the laws of Italy. Where You are a business, the
+courts of Milan, Italy shall have exclusive jurisdiction. Where You are a
+consumer, mandatory provisions of your country of residence continue to apply.
+
+
+--------------------------------------------------------------------------------
+11. ENTIRE AGREEMENT
+--------------------------------------------------------------------------------
+
+This document is the entire agreement concerning the Software and supersedes any
+prior statement or representation, except a signed Commercial Licence, which
+prevails over it to the extent of any conflict. If any provision is held
+unenforceable, the remainder continues in force.
+
+================================================================================
+Daniele Rufo — xdaniele.rufox@gmail.com — 2026
+================================================================================
