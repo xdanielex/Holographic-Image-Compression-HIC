@@ -8,7 +8,8 @@ coding: quadtree partitioning, 35 directional intra prediction modes, adaptive
 DCT-II/DST-VII selection, trellis quantisation and a context-adaptive binary
 arithmetic coder.
 
-**Current release: v6** (`HCMPv6`). On the Kodak test set it reduces bitrate
+**Current release: v6u** (`HCMPv6`) — one binary, with an optional archival mode
+for scanned documents behind a single flag. On the Kodak test set it reduces bitrate
 against JPEG by **37.1 % at equal PSNR** and **32.3 % at equal SSIM** — level with
 WebP method 6 in PSNR (−36.6 % on the same measurement), ahead of WebP in SSIM,
 and still behind AVIF.
@@ -89,7 +90,7 @@ Bjøntegaard delta-rate against JPEG, averaged over the Kodak set.
 
 | Codec                    | BD-rate (PSNR) | BD-rate (SSIM) |
 | :----------------------- | -------------: | -------------: |
-| **holocomp v6**          |    **−36.8 %** |    **−30.5 %** |
+| **holocomp v6u**         |    **−36.8 %** |    **−30.5 %** |
 | WebP (method 6)          |        −36.4 % |        −24.1 % |
 | AVIF (speed 6)           |        −46.4 % |        −40.6 % |
 
@@ -168,6 +169,62 @@ the codec, and is not comparable across experiments.
 
 ---
 
+## Archival mode for scanned documents
+
+The codec ships a single switch, **off by default**. With it off the encoder is
+**byte-for-byte identical** to plain v6 at every quality (verified 50→100).
+
+```bash
+holocomp6u encode --in scan.png --out scan.hc6 --doc            # archival, quality 97
+holocomp6u encode --in scan.png --out scan.hc6 --archival -q 99
+holocomp6u encode --in photo.png --out photo.hc6 --quality 50   # normal, unchanged
+```
+
+**What it changes:** 4:4:4 chroma above quality 95, and a quantisation step floor
+relaxed from 1.0 to 0.25 above quality 96. Both are encoder-side — the chroma
+format is already in the header, so archival files decode with the standard
+binary. Below ~3 bpp the flag does nothing.
+
+**Why it exists.** Above 3 bpp all three 4:2:0 codecs stop improving: WebP
+saturates near 35.9 dB, AVIF near 36.1 dB. On document scans the chroma planes
+are not smooth — coloured stamps, ink bleed, ruled lines — so discarding three
+quarters of them imposes a hard fidelity ceiling.
+
+Four synthetic 1700×2200 pages at ~200 dpi (running text, numeric table, filled
+form with signature, mixed text+photo), degraded with 0.35° rotation, paper
+grain, uneven illumination and slight blur. **PSNR at matched file size:**
+
+| bpp | normal | **archival** | WebP | AVIF | JPEG 4:4:4 |
+| --: | -----: | -----------: | ---: | ---: | ---------: |
+| 1.0 | 33.78 | 33.78 | 33.79 | 33.74 | 33.03 |
+| 2.0 | 34.55 | 34.55 | 34.70 | 34.82 | 33.97 |
+| 3.0 | 35.36 | **37.08** | 35.58 | 35.48 | 34.64 |
+| 4.0 | 35.92 | **37.12** | 35.92 | 35.83 | 35.41 |
+| 6.0 | 36.25 | **40.24** | 35.94 | 36.12 | 37.97 |
+
+**+1.5 dB on WebP and AVIF at 3 bpp, +4.1 dB at 6 bpp** — the largest margin the
+codec achieves over either anchor on any content class.
+
+### The catch: SSIM
+
+Archival mode wins on PSNR and **loses on SSIM**.
+
+| bpp | normal | archival | WebP | AVIF |
+| --: | -----: | -------: | ---: | ---: |
+| 3.0 | 0.9831 | 0.9698 | 0.9804 | 0.9885 |
+| 4.0 | 0.9925 | 0.9702 | 0.9908 | 0.9946 |
+| 6.0 | 0.9969 | **0.9856** | 0.9912 | 0.9999 |
+
+The sub-integer quantisation floor spends bits on coefficients that lower squared
+error without adding perceptible structure — the perceptual lambda in reverse.
+The two metrics rank the codecs differently here.
+
+**Use it for pixel-accurate retention** — legal archives, OCR masters,
+digitisation masters. **Do not use it** for material a person will look at, or
+below 3 bpp where it does nothing.
+
+---
+
 ## Build
 
 No external dependencies beyond a C++17 compiler. Image I/O uses public-domain
@@ -175,16 +232,16 @@ No external dependencies beyond a C++17 compiler. Image I/O uses public-domain
 
 ```bash
 # Linux
-g++ -O3 -march=x86-64-v2 -std=c++17 -Ithird_party src/holocomp6.cpp -lm -pthread -o holocomp6
+g++ -O3 -march=x86-64-v2 -std=c++17 -Ithird_party src/holocomp6u.cpp -lm -pthread -o holocomp6u
 
 # Windows (MSVC)
-cl /O2 /std:c++17 /EHsc /Ithird_party src\holocomp6.cpp /Fe:holocomp6.exe
+cl /O2 /std:c++17 /EHsc /Ithird_party src\holocomp6u.cpp /Fe:holocomp6u.exe
 
 # Windows, cross-compiled from Linux
 pip install ziglang
 python3 -m ziglang c++ -O2 -std=c++17 -Ithird_party \
     -Wno-nullability-completeness -target x86_64-windows-gnu \
-    src/holocomp6.cpp -o holocomp6-win-x86_64.exe
+    src/holocomp6u.cpp -o holocomp6u-win-x86_64.exe
 ```
 
 Prebuilt static binaries for Linux and Windows x86-64 are in `release/bin/`.
@@ -198,22 +255,22 @@ all of these; this one requires none.
 The **command comes first**, before any option:
 
 ```bash
-holocomp6 <command> [options]
+holocomp6u <command> [options]
 
 # encode
-holocomp6 encode --in image.png --out file.hc6 --quality 60
+holocomp6u encode --in image.png --out file.hc6 --quality 60
 
 # decode
-holocomp6 decode --in file.hc6 --out reconstructed.png
+holocomp6u decode --in file.hc6 --out reconstructed.png
 
 # encode, decode and report bpp / PSNR / SSIM in one pass
-holocomp6 roundtrip --in image.png --out file.hc6 --quality 60 --recon out.png
+holocomp6u roundtrip --in image.png --out file.hc6 --quality 60 --recon out.png
 
 # decoder robustness check
-holocomp6 fuzz --in file.hc6 --iters 3000
+holocomp6u fuzz --in file.hc6 --iters 3000
 
 # help
-holocomp6 --help
+holocomp6u --help
 ```
 
 Input may be PNG, JPEG, BMP, TGA or GIF. The compressed file is `.hc6`;
@@ -223,8 +280,8 @@ produce a JPEG — use `--recon out.png`.
 Omitting the command is the most common mistake:
 
 ```
-holocomp6 --in foresta.jpg --out out.jpg --quality 60      # wrong, no command
-holocomp6 roundtrip --in foresta.jpg --out foresta.hc6 \
+holocomp6u --in foresta.jpg --out out.jpg --quality 60      # wrong, no command
+holocomp6u roundtrip --in foresta.jpg --out foresta.hc6 \
           --quality 60 --recon rec.png                     # right
 ```
 
@@ -241,6 +298,8 @@ holocomp6 roundtrip --in foresta.jpg --out foresta.hc6 \
 | `--slices`  | 0       | 0 = auto, N = fixed decodable bands.               |
 | `--no-cclm` | off     | Disable cross-component chroma prediction.         |
 | `--mmlm`    | off     | Multi-model CCLM (measured as a net loss).         |
+| `--archival`| off     | Document mode: 4:4:4 + finer quant above q95.      |
+| `--doc`     | off     | `--archival` with quality 97.                      |
 
 Unlike v1, **block size and coefficient count are not user parameters**. They are
 chosen per block by the rate–distortion search, so there is no tuning to get right.
@@ -281,19 +340,34 @@ image × quality combinations.
 
 ---
 
+## Repository layout
+
+```
+src/holocomp6u.cpp    current codec (~1400 lines, single translation unit)
+src/holocomp6.cpp     v6 without archival mode
+src/holocomp5.cpp     previous release, kept for reference
+src/holocomp.cpp      v2 codec + legacy v1 sparse-coding pipeline
+src/holocomp3.cpp     v3
+src/holocomp4.cpp     v4
+release6u/            prebuilt Linux + Windows executables, paper, this README
+paper/                paper generator + 8 vector figures
+bench/                benchmark harness and raw JSON results
+third_party/          stb_image, stb_image_write (public domain)
+```
+
 Reproducing the published numbers:
 
 ```bash
 python3 bench/bench5.py      # 976 rate–distortion points
 python3 bench/analyze5.py    # BD-rate tables
-
+python3 bench/bench_v1_sweep.py   # 2 736-configuration v1 sweep
 ```
 
 ---
 
 ## Documentation
 
-The current paper — `release6/holocomp_v6_paper.pdf`, 8 pages — contains the full
+The current paper — `release6/holocomp_v6u_paper.pdf`, 8 pages — contains the full
 mathematical treatment, including the formal proof of OMP/thresholding equivalence,
 the comparison against JPEG, WebP and AVIF, and the per-tool ablation.
 
@@ -317,6 +391,10 @@ Sections II and VII of the current paper.
 
 ## Known limitations
 
+- The Windows executable is cross-compiled with zig and has been confirmed
+  running on Windows 11. It is built from the same source as the Linux binary.
+- Console output uses UTF-8; on legacy Windows codepages a few characters in the
+  banner may render incorrectly. This is cosmetic.
 - Evaluation covers eight Kodak images — natural photography only. Behaviour on
   documents, synthetic graphics and screenshots is untested.
 - AVIF remains ahead by roughly 10 BD-rate points on both metrics.
@@ -324,8 +402,11 @@ Sections II and VII of the current paper.
   deblocking and the colour-conversion pass are threaded and the hot loops use
   SSE2, but the arithmetic decoder itself is serial by construction.
 - Performance is uneven across content: level with WebP on the Kodak average,
-  but 3–13 % behind on dense foliage, where large partitions and directional
-  prediction both struggle.
+  3–13 % behind on dense foliage, and ahead of both anchors on document scans
+  above 3 bpp in archival mode.
+- Archival mode trades SSIM for PSNR and is off by default for that reason.
+- The document corpus is synthetic (rendered pages plus scan effects), not real
+  scanner output.
 - SIMD is SSE2 only. No AVX2 path, no runtime dispatch.
 - No progressive decode, no alpha channel.
 
